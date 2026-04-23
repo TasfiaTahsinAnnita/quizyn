@@ -14,16 +14,17 @@ This file records all implementations, design decisions, and future plans for th
 - [x] **Authentication**: Setup NextAuth with Credentials provider (ready for MySQL).
 - [x] **Host Dashboard**: Created the layout and integrated dynamic data fetching from MySQL.
 - [x] **Quiz Creator**: Implemented a dynamic form and connected it to the backend API.
-- [x] **API Routes**: Created POST and GET endpoints for quizzes using Prisma/MySQL.
+- [x] **API Routes**: Created POST and GET endpoints for quizzes and game sessions.
+- [x] **Lobby System**: Built the real-time Host Lobby and Player Join logic using Pusher.
 - [x] **GitHub Push**: Code pushed to `https://github.com/TasfiaTahsinAnnita/quizyn.git`.
 - [/] **Finalizing Installation**: Syncing dependencies with `--legacy-peer-deps`.
 - [ ] **Premium Design**: Define a vibrant color palette and custom components.
 - [ ] **Auth**: Implement NextAuth for host accounts.
 
 ## Next Steps
-1.  **Lobby System**: Set up Pusher channels for generating PINs and hosting real-time lobbies.
-2.  **Gameplay Engine**: Core logic for broadcasting questions and collecting answers.
-3.  **Player View**: Build the interface for players to join and answer via PIN.
+1.  **Gameplay Engine**: Logic for the host to "Start Game" and cycle through questions.
+2.  **Player View**: Real-time interface for players to see shapes and answer.
+3.  **Leaderboard**: Real-time scoring and ranking between questions.
 
 ### Tech Stack Confirmed
 - **Framework**: Next.js 14+ (App Router)

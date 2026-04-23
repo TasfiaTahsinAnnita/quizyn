@@ -27,6 +27,24 @@ export default function Dashboard() {
       .catch(() => setLoading(false));
   }, []);
 
+  const handleStartGame = async (quizId: string) => {
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId }),
+      });
+      const data = await res.json();
+      if (data.pin) {
+        window.location.href = `/lobby/${data.pin}`;
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (err) {
+      alert('Failed to start game.');
+    }
+  };
+
   return (
     <div className="dashboard_container">
       <header className="dashboard_header">
@@ -55,7 +73,7 @@ export default function Dashboard() {
                 <p>{quiz.description || 'No description'}</p>
                 <div className="quiz_stats">
                   <span>{quiz._count.questions} Questions</span>
-                  <Button variant="primary">Play</Button>
+                  <Button variant="primary" onClick={() => handleStartGame(quiz.id)}>Play</Button>
                 </div>
               </div>
             ))
