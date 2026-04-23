@@ -16,6 +16,8 @@ This file records all implementations, design decisions, and future plans for th
 - [x] **Quiz Creator**: Implemented a dynamic form and connected it to the backend API.
 - [x] **API Routes**: Created POST and GET endpoints for quizzes and game sessions.
 - [x] **Lobby System**: Built the real-time Host Lobby and Player Join logic using Pusher.
+- [x] **Gameplay Engine**: Implemented the Host Game view with questions, timers, and live result charts.
+- [x] **Player View**: Created the mobile-friendly shape interface for players to answer questions.
 - [x] **GitHub Push**: Code pushed to `https://github.com/TasfiaTahsinAnnita/quizyn.git`.
 - [/] **Finalizing Installation**: Syncing dependencies with `--legacy-peer-deps`.
 - [ ] **Premium Design**: Define a vibrant color palette and custom components.

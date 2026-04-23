@@ -23,8 +23,9 @@ export default function Home() {
       const data = await res.json();
       
       if (res.ok) {
-        alert(`Joined as ${nickname}! Waiting for host to start...`);
-        // We will redirect to a Player View later
+        localStorage.setItem('current_pin', pin);
+        localStorage.setItem('nickname', nickname);
+        window.location.href = '/play';
       } else {
         alert(data.error);
       }

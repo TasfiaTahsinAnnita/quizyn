@@ -54,6 +54,7 @@ model GameSession {
   quiz      Quiz     @relation(fields: [quizId], references: [id])
   quizId    String
   players   Player[]
+  responses Response[]
   createdAt DateTime @default(now())
 }
 
@@ -64,4 +65,19 @@ model Player {
   session   GameSession @relation(fields: [sessionId], references: [id])
   sessionId String
   pusherId  String?
+  responses Response[]
+}
+
+model Response {
+  id         String   @id @default(cuid())
+  player     Player   @relation(fields: [playerId], references: [id])
+  playerId   String
+  questionId String
+  optionIdx  Int
+  isCorrect  Boolean
+  session    GameSession @relation(fields: [sessionId], references: [id])
+  sessionId  String
+  createdAt  DateTime @default(now())
+
+  @@unique([playerId, questionId]) // One answer per question per player
 }

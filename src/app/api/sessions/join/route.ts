@@ -20,19 +20,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Session not found or already started' }, { status: 404 });
     }
 
-    // Create the player
-    const player = await prisma.player.create({
-      data: {
-        nickname,
+    // Check if the player already exists in this session
+    let player = await prisma.player.findFirst({
+      where: {
         sessionId: session.id,
+        nickname: nickname
       }
     });
 
+    if (!player) {
+      // Create the player only if they don't exist
+      player = await prisma.player.create({
+        data: {
+          nickname,
+          sessionId: session.id,
+        }
+      });
+    }
+
     // Broadcast join event via Pusher
-    await pusherServer.trigger(`session-${pin}`, 'player-joined', {
-      id: player.id,
-      nickname: player.nickname
-    });
+    try {
+      if (process.env.PUSHER_APP_ID !== 'your-app-id') {
+        await pusherServer.trigger(`session-${pin}`, 'player-joined', {
+          id: player.id,
+          nickname: player.nickname
+        });
+      } else {
+        console.warn('Real-time disabled: Please add real Pusher keys to your .env file.');
+      }
+    } catch (pusherError) {
+      console.error('Pusher notification failed:', pusherError);
+      // We don't return an error here so the player still joins the DB
+    }
 
     return NextResponse.json({ player, session }, { status: 201 });
   } catch (error: any) {

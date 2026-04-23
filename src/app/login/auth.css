@@ -1,0 +1,79 @@
+.auth_container {
+  min-height: 100vh;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth_card {
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.logo_auth {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.auth_card h2 {
+  font-size: 1.5rem;
+  color: #666;
+  margin-bottom: 2.5rem;
+}
+
+.input_group {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.input_group label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.input_group input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input_group input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.auth_btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+}
+
+.auth_footer {
+  margin-top: 2rem;
+  color: #666;
+}
+
+.auth_footer a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth_footer a:hover {
+  text-decoration: underline;
+}

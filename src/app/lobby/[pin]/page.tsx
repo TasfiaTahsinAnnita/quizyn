@@ -16,22 +16,49 @@ export default function HostLobby() {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
-    // Subscribe to the session channel
-    const channel = pusherClient.subscribe(`session-${pin}`);
-
-    // Listen for players joining
-    channel.bind('player-joined', (data: Player) => {
-      setPlayers(prev => {
-        // Prevent duplicates
-        if (prev.find(p => p.id === data.id)) return prev;
-        return [...prev, data];
-      });
-    });
-
-    return () => {
-      pusherClient.unsubscribe(`session-${pin}`);
+    // 1. Initial Fetch of existing players
+    const fetchPlayers = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${pin}`);
+        const data = await res.json();
+        if (data.players) setPlayers(data.players);
+      } catch (err) {
+        console.error('Failed to fetch players:', err);
+      }
     };
+    fetchPlayers();
+
+    // 2. Real-time Listen (Pusher)
+    if (pusherClient && process.env.NEXT_PUBLIC_PUSHER_KEY !== 'your-pusher-key') {
+      const channel = pusherClient.subscribe(`session-${pin}`);
+      channel.bind('player-joined', (data: Player) => {
+        setPlayers(prev => {
+          if (prev.find(p => p.id === data.id)) return prev;
+          return [...prev, data];
+        });
+      });
+
+      channel.bind('player-left', (data: { nickname: string }) => {
+        setPlayers(prev => prev.filter(p => p.nickname !== data.nickname));
+      });
+
+      return () => pusherClient.unsubscribe(`session-${pin}`);
+    } else {
+      // 3. Fallback Polling (Every 1 second if Pusher is disabled)
+      const interval = setInterval(fetchPlayers, 1000);
+      return () => clearInterval(interval);
+    }
   }, [pin]);
+
+  const handleStartGame = async () => {
+    try {
+      // Notify all players via Pusher
+      await fetch(`/api/sessions/${pin}/start`, { method: 'POST' });
+      window.location.href = `/game/${pin}`;
+    } catch (err) {
+      alert('Failed to start game.');
+    }
+  };
 
   return (
     <div className="lobby_wrapper">
@@ -56,7 +83,7 @@ export default function HostLobby() {
       </div>
 
       {players.length > 0 && (
-        <Button variant="secondary" className="start_game_btn">
+        <Button variant="secondary" className="start_game_btn" onClick={handleStartGame}>
           Start Game
         </Button>
       )}

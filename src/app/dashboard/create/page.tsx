@@ -79,17 +79,22 @@ export default function CreateQuiz() {
         body: JSON.stringify({ title, description, questions }),
       });
 
+      const contentType = res.headers.get("content-type");
       if (res.ok) {
         alert('Quiz saved successfully!');
         window.location.href = '/dashboard';
-      } else {
+      } else if (contentType && contentType.indexOf("application/json") !== -1) {
         const data = await res.json();
-        console.error('Save failed:', data);
+        console.error('Save failed with JSON:', data);
         alert('Error: ' + (data.error || 'Failed to save quiz') + (data.details ? ` (${data.details})` : ''));
+      } else {
+        const text = await res.text();
+        console.error('Save failed with HTML/Text:', text);
+        alert('Server Error: The database might not be set up. Please run "npx prisma db push".');
       }
     } catch (err) {
-      console.error('Network/Save error:', err);
-      alert('Network error. Is your server running?');
+      console.error('Network error:', err);
+      alert('Network error. Check if your MySQL is running.');
     } finally {
       setIsSaving(false);
     }
