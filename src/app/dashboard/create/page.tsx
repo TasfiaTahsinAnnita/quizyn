@@ -1,0 +1,182 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/Button';
+import Link from 'next/link';
+import './create.css';
+
+interface Option {
+  text: string;
+  isCorrect: boolean;
+}
+
+interface Question {
+  text: string;
+  timer: number;
+  options: Option[];
+}
+
+export default function CreateQuiz() {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [questions, setQuestions] = useState<Question[]>([
+    {
+      text: '',
+      timer: 20,
+      options: [
+        { text: '', isCorrect: true },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+      ]
+    }
+  ]);
+
+  const addQuestion = () => {
+    setQuestions([...questions, {
+      text: '',
+      timer: 20,
+      options: [
+        { text: '', isCorrect: true },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+      ]
+    }]);
+  };
+
+  const updateQuestionText = (index: number, text: string) => {
+    const newQuestions = [...questions];
+    newQuestions[index].text = text;
+    setQuestions(newQuestions);
+  };
+
+  const updateOptionText = (qIndex: number, oIndex: number, text: string) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].options[oIndex].text = text;
+    setQuestions(newQuestions);
+  };
+
+  const setCorrectOption = (qIndex: number, oIndex: number) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].options.forEach((opt, i) => {
+      opt.isCorrect = i === oIndex;
+    });
+    setQuestions(newQuestions);
+  };
+
+  const handleSave = async () => {
+    // Logic to save to MySQL via API will go here
+    console.log({ title, description, questions });
+    alert('Quiz structure ready! Next, we will connect this to the database.');
+  };
+
+  return (
+    <div className="create_page_wrapper">
+      <div className="create_container animate-fade-in">
+        <header className="create_header">
+          <h1>Create New Quiz</h1>
+          <p>Define your questions and answers.</p>
+        </header>
+
+        <section className="basics_section">
+          <div className="form_group">
+            <label>Quiz Title</label>
+            <input 
+              type="text" 
+              className="form_input" 
+              placeholder="e.g., General Knowledge Trivia"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="form_group">
+            <label>Description (Optional)</label>
+            <textarea 
+              className="form_input" 
+              placeholder="What is this quiz about?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+        </section>
+
+        <section className="questions_section">
+          <h2>Questions</h2>
+          {questions.map((q, qIndex) => (
+            <div key={qIndex} className="question_card">
+              <div className="form_group">
+                <label>Question {qIndex + 1}</label>
+                <input 
+                  type="text" 
+                  className="form_input" 
+                  placeholder="Enter your question"
+                  value={q.text}
+                  onChange={(e) => updateQuestionText(qIndex, e.target.value)}
+                />
+              </div>
+
+              <div className="options_grid">
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} className="option_item">
+                    <input 
+                      type="radio" 
+                      name={`correct-${qIndex}`}
+                      checked={opt.isCorrect}
+                      onChange={() => setCorrectOption(qIndex, oIndex)}
+                      className="correct_checkbox"
+                    />
+                    <input 
+                      type="text" 
+                      className="option_input" 
+                      placeholder={`Option ${oIndex + 1}`}
+                      value={opt.text}
+                      onChange={(e) => updateOptionText(qIndex, oIndex, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="form_group" style={{ marginTop: '1rem' }}>
+                <label>Timer (Seconds)</label>
+                <select 
+                  className="form_input" 
+                  value={q.timer}
+                  onChange={(e) => {
+                    const newQuestions = [...questions];
+                    newQuestions[qIndex].timer = parseInt(e.target.value);
+                    setQuestions(newQuestions);
+                  }}
+                >
+                  <option value={10}>10s</option>
+                  <option value={20}>20s</option>
+                  <option value={30}>30s</option>
+                  <option value={60}>60s</option>
+                </select>
+              </div>
+            </div>
+          ))}
+
+          <button className="add_question_btn" onClick={addQuestion}>
+            + Add Another Question
+          </button>
+        </section>
+
+        <footer className="footer_actions">
+          <Link href="/dashboard">
+            <Button variant="secondary" style={{ backgroundColor: '#ccc', borderBottomColor: '#aaa' }}>Cancel</Button>
+          </Link>
+          <Button variant="primary" onClick={handleSave}>Save Quiz</Button>
+        </footer>
+      </div>
+
+      <style jsx>{`
+        .create_page_wrapper {
+          min-height: 100vh;
+          background: #f0f2f5;
+          padding: 2rem 0;
+        }
+      `}</style>
+    </div>
+  );
+}
