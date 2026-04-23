@@ -65,10 +65,32 @@ export default function CreateQuiz() {
     setQuestions(newQuestions);
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSave = async () => {
-    // Logic to save to MySQL via API will go here
-    console.log({ title, description, questions });
-    alert('Quiz structure ready! Next, we will connect this to the database.');
+    if (!title.trim()) return alert('Please enter a quiz title');
+    if (questions.some(q => !q.text.trim())) return alert('Please fill in all questions');
+    
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/quizzes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, questions }),
+      });
+
+      if (res.ok) {
+        alert('Quiz saved successfully!');
+        window.location.href = '/dashboard';
+      } else {
+        const data = await res.json();
+        alert('Error: ' + (data.error || 'Failed to save quiz'));
+      }
+    } catch (err) {
+      alert('Network error. Is your server running?');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -166,7 +188,13 @@ export default function CreateQuiz() {
           <Link href="/dashboard">
             <Button variant="secondary" style={{ backgroundColor: '#ccc', borderBottomColor: '#aaa' }}>Cancel</Button>
           </Link>
-          <Button variant="primary" onClick={handleSave}>Save Quiz</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Quiz'}
+          </Button>
         </footer>
       </div>
 

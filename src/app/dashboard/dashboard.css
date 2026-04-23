@@ -58,7 +58,38 @@
   box-shadow: var(--shadow);
 }
 
-.empty_state p {
-  font-size: 1.2rem;
+.quiz_card_item {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quiz_card_item h3 {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.quiz_card_item p {
   color: #666;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.quiz_stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.quiz_stats span {
+  font-weight: 600;
+  color: var(--primary);
 }
