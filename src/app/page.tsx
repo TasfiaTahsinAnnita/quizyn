@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="main_container">
       <div className="hero_section animate-fade-in">
-        <h1 className="logo_text">Quizzy!</h1>
+        <h1 className="logo_text">Quizyn!</h1>
         <p className="subtitle">Real-time fun, simplified.</p>
         
         <div className="action_cards">

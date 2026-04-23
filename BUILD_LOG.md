@@ -1,6 +1,6 @@
-# Quizzy Build Log
+# Quizyn Build Log
 
-This file records all implementations, design decisions, and future plans for the Quizzy project.
+This file records all implementations, design decisions, and future plans for the Quizyn project.
 
 ## [2026-04-23] Initial Setup
 
@@ -13,6 +13,7 @@ This file records all implementations, design decisions, and future plans for th
 - [x] **Dependency Fix**: Manually updated `package.json` with `bcrypt`, `next-auth`, and `pusher`.
 - [x] **Authentication**: Setup NextAuth with Credentials provider (ready for MySQL).
 - [x] **Host Dashboard**: Created the basic layout for quiz management.
+- [x] **GitHub Push**: Code pushed to `https://github.com/TasfiaTahsinAnnita/quizyn.git`.
 - [/] **Finalizing Installation**: Syncing dependencies with `--legacy-peer-deps`.
 - [ ] **Premium Design**: Define a vibrant color palette and custom components.
 - [ ] **Auth**: Implement NextAuth for host accounts.

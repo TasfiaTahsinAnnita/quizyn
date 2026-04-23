@@ -6,7 +6,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard_container">
       <header className="dashboard_header">
-        <h1 className="logo_small">Quizzy!</h1>
+        <h1 className="logo_small">Quizyn!</h1>
         <div className="user_profile">
           <span>Welcome, Host</span>
           <Button variant="red">Logout</Button>
