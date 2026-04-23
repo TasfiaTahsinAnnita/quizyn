@@ -1,48 +1,50 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
+    console.log('Quiz Save Request Received');
     const session = await getServerSession(authOptions);
     
-    // For now, if no session, we'll use a placeholder or return 401
-    // To make development easier, we'll allow it if we're in dev mode
-    // but in production this MUST be secured.
     let hostId = session?.user?.id;
     
     if (!hostId) {
-        // Find or create a default user for development purposes
-        const defaultUser = await prisma.user.findFirst();
-        if (defaultUser) {
-            hostId = defaultUser.id;
-        } else {
-            // Create a dummy host if none exists
-            const dummy = await prisma.user.create({
-                data: {
-                    email: 'dev@quizyn.com',
-                    name: 'Dev Host',
-                    password: 'password123' // Placeholder
-                }
-            });
-            hostId = dummy.id;
+        console.log('No session found, using/creating dev host');
+        try {
+            const defaultUser = await prisma.user.findFirst();
+            if (defaultUser) {
+                hostId = defaultUser.id;
+            } else {
+                const dummy = await prisma.user.create({
+                    data: {
+                        email: 'dev@quizyn.com',
+                        name: 'Dev Host',
+                        password: 'password123'
+                    }
+                });
+                hostId = dummy.id;
+            }
+        } catch (dbError: any) {
+            console.error('DATABASE ERROR: Could not find/create host. Is your MySQL running and tables created?', dbError.message);
+            return NextResponse.json({ 
+                error: 'Database connection failed. Please check your .env file and run "npx prisma db push".',
+                details: dbError.message 
+            }, { status: 500 });
         }
     }
 
-    const { title, description, questions } = await req.json();
-
-    if (!title || !questions) {
-      return NextResponse.json({ error: 'Title and questions are required' }, { status: 400 });
-    }
+    const body = await req.json();
+    console.log('Saving quiz:', body.title);
 
     const quiz = await prisma.quiz.create({
       data: {
-        title,
-        description,
+        title: body.title,
+        description: body.description,
         hostId,
         questions: {
-          create: questions.map((q: any) => ({
+          create: body.questions.map((q: any) => ({
             text: q.text,
             timer: q.timer,
             options: {
@@ -53,20 +55,14 @@ export async function POST(req: Request) {
             }
           }))
         }
-      },
-      include: {
-        questions: {
-          include: {
-            options: true
-          }
-        }
       }
     });
 
+    console.log('Quiz saved successfully:', quiz.id);
     return NextResponse.json(quiz, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating quiz:', error);
-    return NextResponse.json({ error: 'Failed to create quiz', details: error.message }, { status: 500 });
+    console.error('INTERNAL SERVER ERROR:', error);
+    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }
 }
 

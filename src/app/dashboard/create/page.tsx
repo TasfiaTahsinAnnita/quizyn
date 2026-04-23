@@ -84,9 +84,11 @@ export default function CreateQuiz() {
         window.location.href = '/dashboard';
       } else {
         const data = await res.json();
-        alert('Error: ' + (data.error || 'Failed to save quiz'));
+        console.error('Save failed:', data);
+        alert('Error: ' + (data.error || 'Failed to save quiz') + (data.details ? ` (${data.details})` : ''));
       }
     } catch (err) {
+      console.error('Network/Save error:', err);
       alert('Network error. Is your server running?');
     } finally {
       setIsSaving(false);
