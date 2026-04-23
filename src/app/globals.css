@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --background: #f2f2f2;
+  --foreground: #333333;
+  
+  /* Kahoot Colors */
+  --primary: #46178f;
+  --primary-dark: #35116d;
+  --blue: #1368ce;
+  --red: #e21b3c;
+  --green: #26890c;
+  --yellow: #ffa602;
+  --white: #ffffff;
+  
+  /* Accents */
+  --glass: rgba(255, 255, 255, 0.8);
+  --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 800;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+  transition: all 0.1s ease;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+button:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Premium Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.premium_btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  color: white;
+  border-radius: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+  transition: all 0.1s ease;
+}
+
+.premium_btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.premium_btn.full_width {
+  width: 100%;
+}
+
+.btn_primary { background-color: var(--primary); }
+.btn_secondary { background-color: var(--green); }
+.btn_red { background-color: var(--red); }
+.btn_blue { background-color: var(--blue); }
+.btn_yellow { background-color: var(--yellow); }
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}

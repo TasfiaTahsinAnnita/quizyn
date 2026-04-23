@@ -1,0 +1,64 @@
+.dashboard_container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  color: var(--foreground);
+}
+
+.dashboard_header {
+  background-color: var(--white);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.logo_small {
+  font-size: 2rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.user_profile {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-weight: 600;
+}
+
+.dashboard_main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+.dashboard_actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.quiz_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.empty_state {
+  grid-column: 1 / -1;
+  background: white;
+  padding: 4rem;
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.empty_state p {
+  font-size: 1.2rem;
+  color: #666;
+}

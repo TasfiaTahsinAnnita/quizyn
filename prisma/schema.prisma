@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  quizzes   Quiz[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quiz {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  host        User           @relation(fields: [hostId], references: [id])
+  hostId      String
+  questions   Question[]
+  sessions    GameSession[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  text      String
+  timer     Int      @default(20) // seconds
+  points    Int      @default(1000)
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  quizId    String
+  options   Option[]
+}
+
+model Option {
+  id         String   @id @default(cuid())
+  text       String
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+}
+
+model GameSession {
+  id        String   @id @default(cuid())
+  pin       String   @unique
+  status    String   @default("LOBBY") // LOBBY, ACTIVE, FINISHED
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  quizId    String
+  players   Player[]
+  createdAt DateTime @default(now())
+}
+
+model Player {
+  id        String      @id @default(cuid())
+  nickname  String
+  score     Int         @default(0)
+  session   GameSession @relation(fields: [sessionId], references: [id])
+  sessionId String
+  pusherId  String?
+}
