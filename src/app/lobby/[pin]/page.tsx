@@ -19,9 +19,11 @@ export default function HostLobby() {
     // 1. Initial Fetch of existing players
     const fetchPlayers = async () => {
       try {
-        const res = await fetch(`/api/sessions/${pin}`);
+        const res = await fetch(`/api/sessions/${pin}`, { cache: 'no-store' });
         const data = await res.json();
-        if (data.players) setPlayers(data.players);
+        if (data.players) {
+          setPlayers(data.players);
+        }
       } catch (err) {
         console.error('Failed to fetch players:', err);
       }
@@ -29,8 +31,11 @@ export default function HostLobby() {
     fetchPlayers();
 
     // 2. Real-time Listen (Pusher)
-    if (pusherClient && process.env.NEXT_PUBLIC_PUSHER_KEY !== 'your-pusher-key') {
-      const channel = pusherClient.subscribe(`session-${pin}`);
+    let channel: any;
+    const hasPusher = pusherClient && process.env.NEXT_PUBLIC_PUSHER_KEY && process.env.NEXT_PUBLIC_PUSHER_KEY !== 'your-pusher-key';
+    
+    if (hasPusher) {
+      channel = pusherClient.subscribe(`session-${pin}`);
       channel.bind('player-joined', (data: Player) => {
         setPlayers(prev => {
           if (prev.find(p => p.id === data.id)) return prev;
@@ -41,13 +46,15 @@ export default function HostLobby() {
       channel.bind('player-left', (data: { nickname: string }) => {
         setPlayers(prev => prev.filter(p => p.nickname !== data.nickname));
       });
-
-      return () => pusherClient.unsubscribe(`session-${pin}`);
-    } else {
-      // 3. Fallback Polling (Every 1 second if Pusher is disabled)
-      const interval = setInterval(fetchPlayers, 1000);
-      return () => clearInterval(interval);
     }
+
+    // 3. Fallback/Backup Polling (Always run every 2 seconds to be safe)
+    const interval = setInterval(fetchPlayers, 2000);
+
+    return () => {
+      if (channel) pusherClient.unsubscribe(`session-${pin}`);
+      clearInterval(interval);
+    };
   }, [pin]);
 
   const handleStartGame = async () => {

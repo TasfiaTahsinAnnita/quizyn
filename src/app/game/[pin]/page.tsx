@@ -41,8 +41,33 @@ export default function HostGame() {
         setTotalAnswers(prev => prev + 1);
       });
       return () => pusherClient.unsubscribe(`session-${pin}`);
+    } else {
+      // Fallback polling for answers if Pusher is not available
+      const interval = setInterval(async () => {
+        if (gameState !== 'QUESTION') return;
+        
+        try {
+          const res = await fetch(`/api/sessions/${pin}`, { cache: 'no-store' });
+          const data = await res.json();
+          if (data.responses) {
+            // Filter responses for the current question
+            const currentQuestionId = quiz?.questions[currentQuestionIndex]?.id;
+            const currentResponses = data.responses.filter((r: any) => r.questionId === currentQuestionId);
+            
+            if (currentResponses.length > totalAnswers) {
+              const newAnswers = [0, 0, 0, 0];
+              currentResponses.forEach((r: any) => {
+                newAnswers[r.optionIdx]++;
+              });
+              setAnswers(newAnswers);
+              setTotalAnswers(currentResponses.length);
+            }
+          }
+        } catch (err) {}
+      }, 2000);
+      return () => clearInterval(interval);
     }
-  }, [pin]);
+  }, [pin, gameState, currentQuestionIndex, quiz, totalAnswers]);
 
   useEffect(() => {
     if (timeLeft > 0 && gameState === 'QUESTION') {

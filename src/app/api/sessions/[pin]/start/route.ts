@@ -4,10 +4,10 @@ import { pusherServer } from '@/lib/pusher';
 
 export async function POST(
   req: Request,
-  { params }: { params: { pin: string } }
+  { params }: { params: Promise<{ pin: string }> }
 ) {
   try {
-    const { pin } = params;
+    const { pin } = await params;
 
     const session = await prisma.gameSession.update({
       where: { pin },

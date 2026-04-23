@@ -10,6 +10,8 @@ export default function PlayerGame() {
   const [nickname, setNickname] = useState<string | null>(null);
   const [gameState, setGameState] = useState<'WAITING' | 'PLAYING' | 'RESULT'>('WAITING');
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     const savedPin = localStorage.getItem('current_pin');
@@ -19,25 +21,65 @@ export default function PlayerGame() {
       setPin(savedPin);
       setNickname(savedName);
       
-      if (!pusherClient) return;
+      const fetchSession = async () => {
+        try {
+          const res = await fetch(`/api/sessions/${savedPin}`, { cache: 'no-store' });
+          const data = await res.json();
+          
+          if (data.error || !data.players) {
+            console.error('Session error:', data.error);
+            // If session is not found, clear storage and go back
+            localStorage.removeItem('current_pin');
+            window.location.href = '/';
+            return;
+          }
+
+          setSession(data);
+          
+          // Find the current question based on responses
+          const player = data.players.find((p: any) => p.nickname === savedName);
+          if (player) {
+            const answeredQuestionIds = (data.responses || [])
+              .filter((r: any) => r.playerId === player.id)
+              .map((r: any) => r.questionId);
+            
+            const unanswered = (data.quiz?.questions || []).filter(
+              (q: any) => !answeredQuestionIds.includes(q.id)
+            );
+            
+            if (unanswered.length > 0) {
+              setCurrentQuestion(unanswered[0]);
+              if (data.status === 'PLAYING') setGameState('PLAYING');
+            } else {
+              setGameState('RESULT');
+              setHasAnswered(true);
+            }
+          }
+        } catch (err) {
+          console.error('Fetch session failed:', err);
+        }
+      };
+
+      fetchSession();
+
+      if (!pusherClient) {
+        // Polling fallback
+        const interval = setInterval(fetchSession, 3000);
+        return () => clearInterval(interval);
+      }
 
       const channel = pusherClient.subscribe(`session-${savedPin}`);
       
-      channel.bind('game-started', () => setGameState('PLAYING'));
+      channel.bind('game-started', () => {
+        setGameState('PLAYING');
+        fetchSession();
+      });
       
       channel.bind('new-question', () => {
         setGameState('PLAYING');
         setHasAnswered(false);
+        fetchSession();
       });
-
-      // Polling fallback for game status if no Pusher
-      const interval = setInterval(async () => {
-        const res = await fetch(`/api/sessions/${savedPin}`);
-        const data = await res.json();
-        if (data.status === 'PLAYING' && gameState === 'WAITING') {
-          setGameState('PLAYING');
-        }
-      }, 2000);
 
       // Handle tab closing
       const handleTabClose = () => {
@@ -50,13 +92,12 @@ export default function PlayerGame() {
       return () => {
         window.removeEventListener('beforeunload', handleTabClose);
         pusherClient.unsubscribe(`session-${savedPin}`);
-        clearInterval(interval);
       };
     }
-  }, [gameState]);
+  }, [pin]);
 
   const handleAnswer = async (index: number) => {
-    if (hasAnswered) return;
+    if (hasAnswered || !currentQuestion) return;
     
     setHasAnswered(true);
     setGameState('RESULT');
@@ -68,8 +109,8 @@ export default function PlayerGame() {
         pin, 
         nickname, 
         optionIndex: index,
-        timeLeft: 10, // Placeholder: In a real app, we'd track timer on player side too
-        totalTime: 20
+        timeLeft: 10, 
+        totalTime: currentQuestion.timer || 20
       }),
     });
   };
@@ -81,6 +122,7 @@ export default function PlayerGame() {
         <div className="status_card">
           <h2 className="animate-pulse">You're in!</h2>
           <p>See your name on screen?</p>
+          <div className="player_info_tag">{nickname}</div>
         </div>
       </div>
     );
@@ -88,25 +130,29 @@ export default function PlayerGame() {
 
   return (
     <div className="player_game_container">
-      {gameState === 'PLAYING' ? (
-        <div className="player_shapes_grid">
-          <button className="player_shape_btn red" onClick={() => handleAnswer(0)}>
-            <Triangle size={80} fill="white" />
-          </button>
-          <button className="player_shape_btn blue" onClick={() => handleAnswer(1)}>
-            <Square size={80} fill="white" />
-          </button>
-          <button className="player_shape_btn yellow" onClick={() => handleAnswer(2)}>
-            <Circle size={80} fill="#333" />
-          </button>
-          <button className="player_shape_btn green" onClick={() => handleAnswer(3)}>
-            <Hexagon size={80} fill="white" />
-          </button>
+      {gameState === 'PLAYING' && currentQuestion ? (
+        <div className="player_quiz_view">
+          <div className="question_info">
+            <h3>{currentQuestion.text}</h3>
+          </div>
+          <div className="player_shapes_grid">
+            {currentQuestion.options.map((opt: any, i: number) => {
+              const icons = [<Triangle key="t" />, <Square key="s" />, <Circle key="c" />, <Hexagon key="h" />];
+              const colors = ['red', 'blue', 'yellow', 'green'];
+              return (
+                <button key={opt.id} className={`player_shape_btn ${colors[i]}`} onClick={() => handleAnswer(i)}>
+                  <div className="shape_icon_small">{icons[i]}</div>
+                  <span className="option_label">{opt.text}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="player_wait_screen result_state">
           <h2 className="animate-bounce">Sent!</h2>
           <p>Check the host's screen for the results.</p>
+          <div className="player_info_tag">{nickname}</div>
         </div>
       )}
     </div>
