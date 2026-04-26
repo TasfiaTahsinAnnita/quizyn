@@ -48,7 +48,13 @@ export default function PlayerGame() {
             );
             
             if (unanswered.length > 0) {
-              setCurrentQuestion(unanswered[0]);
+              const nextQ = unanswered[0];
+              setCurrentQuestion((prevQ: any) => {
+                if (prevQ?.id !== nextQ.id) {
+                  setHasAnswered(false);
+                }
+                return nextQ;
+              });
               if (data.status === 'PLAYING') setGameState('PLAYING');
             } else {
               setGameState('RESULT');
@@ -61,25 +67,24 @@ export default function PlayerGame() {
       };
 
       fetchSession();
+      
+      const interval = setInterval(fetchSession, 3000);
 
-      if (!pusherClient) {
-        // Polling fallback
-        const interval = setInterval(fetchSession, 3000);
-        return () => clearInterval(interval);
+      let channel: any;
+      if (pusherClient) {
+        channel = pusherClient.subscribe(`session-${savedPin}`);
+        
+        channel.bind('game-started', () => {
+          setGameState('PLAYING');
+          fetchSession();
+        });
+        
+        channel.bind('new-question', () => {
+          setGameState('PLAYING');
+          setHasAnswered(false);
+          fetchSession();
+        });
       }
-
-      const channel = pusherClient.subscribe(`session-${savedPin}`);
-      
-      channel.bind('game-started', () => {
-        setGameState('PLAYING');
-        fetchSession();
-      });
-      
-      channel.bind('new-question', () => {
-        setGameState('PLAYING');
-        setHasAnswered(false);
-        fetchSession();
-      });
 
       // Handle tab closing
       const handleTabClose = () => {
@@ -91,7 +96,8 @@ export default function PlayerGame() {
 
       return () => {
         window.removeEventListener('beforeunload', handleTabClose);
-        pusherClient.unsubscribe(`session-${savedPin}`);
+        if (channel) pusherClient.unsubscribe(`session-${savedPin}`);
+        clearInterval(interval);
       };
     }
   }, [pin]);
@@ -117,12 +123,17 @@ export default function PlayerGame() {
 
   if (gameState === 'WAITING') {
     return (
-      <div className="player_wait_screen">
-        <h1 className="logo_mini">Quizyn!</h1>
-        <div className="status_card">
-          <h2 className="animate-pulse">You're in!</h2>
-          <p>See your name on screen?</p>
-          <div className="player_info_tag">{nickname}</div>
+      <div className="player_status_overlay">
+        <div className="status_content">
+          <h1 className="logo_mini_display">Quizyn!</h1>
+          <div className="waiting_card">
+            <h2 className="animate-pulse">You're in!</h2>
+            <p>See your name on the host's screen?</p>
+          </div>
+        </div>
+        <div className="player_footer_tag">
+          <span>Logged in as</span>
+          <strong>{nickname}</strong>
         </div>
       </div>
     );
@@ -132,27 +143,52 @@ export default function PlayerGame() {
     <div className="player_game_container">
       {gameState === 'PLAYING' && currentQuestion ? (
         <div className="player_quiz_view">
-          <div className="question_info">
-            <h3>{currentQuestion.text}</h3>
+          <header className="player_view_header">
+            <div className="quiz_meta">
+              <span className="quiz_title_label">{session?.quiz?.title || 'Quizzy'}</span>
+              <span className="question_progress">
+                Question {session?.quiz?.questions?.findIndex((q: any) => q.id === currentQuestion.id) + 1} of {session?.quiz?.questions?.length}
+              </span>
+            </div>
+          </header>
+
+          <div className="question_info_main">
+            <h3 className="player_question_text">{currentQuestion.text}</h3>
           </div>
+
           <div className="player_shapes_grid">
             {currentQuestion.options.map((opt: any, i: number) => {
               const icons = [<Triangle key="t" />, <Square key="s" />, <Circle key="c" />, <Hexagon key="h" />];
               const colors = ['red', 'blue', 'yellow', 'green'];
               return (
-                <button key={opt.id} className={`player_shape_btn ${colors[i]}`} onClick={() => handleAnswer(i)}>
-                  <div className="shape_icon_small">{icons[i]}</div>
-                  <span className="option_label">{opt.text}</span>
+                <button 
+                  key={opt.id} 
+                  className={`player_shape_btn ${colors[i]} animate-pop-in`} 
+                  style={{ animationDelay: `${i * 100}ms` }}
+                  onClick={() => handleAnswer(i)}
+                >
+                  <div className="shape_icon_wrapper">{icons[i]}</div>
+                  <span className="option_text_display">{opt.text}</span>
                 </button>
               );
             })}
           </div>
         </div>
       ) : (
-        <div className="player_wait_screen result_state">
-          <h2 className="animate-bounce">Sent!</h2>
-          <p>Check the host's screen for the results.</p>
-          <div className="player_info_tag">{nickname}</div>
+        <div className="player_status_overlay">
+          <div className="status_content">
+            <div className="pulse_icon">⚡</div>
+            <h2 className="status_title">{hasAnswered ? 'Answer Sent!' : 'Get Ready!'}</h2>
+            <p className="status_subtitle">
+              {hasAnswered 
+                ? 'Wait for the host to reveal the results.' 
+                : 'The next question will appear shortly.'}
+            </p>
+          </div>
+          <div className="player_footer_tag">
+            <span>Playing as</span>
+            <strong>{nickname}</strong>
+          </div>
         </div>
       )}
     </div>

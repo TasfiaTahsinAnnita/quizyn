@@ -14,6 +14,7 @@ export async function GET(
       where: { pin },
       include: {
         players: true,
+        responses: true,
         quiz: {
           include: {
             questions: {
