@@ -47,6 +47,7 @@ export async function POST(req: Request) {
           create: body.questions.map((q: any) => ({
             text: q.text,
             timer: q.timer,
+            points: q.points,
             options: {
               create: q.options.map((o: any) => ({
                 text: o.text,

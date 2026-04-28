@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { pusherClient } from '@/lib/pusher';
 import { Button } from '@/components/Button';
+import { AnimatedAvatar } from '@/components/AnimatedAvatar';
 import { Triangle, Square, Circle, Hexagon } from 'lucide-react';
 import './game.css';
 
@@ -23,7 +24,17 @@ export default function HostGame() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [allResponses, setAllResponses] = useState<any[]>([]);
   const [viewingQuestionIndex, setViewingQuestionIndex] = useState<number | null>(null);
+  const [showBars, setShowBars] = useState(false);
   const currentQuestionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (gameState === 'RESULTS') {
+      const t = setTimeout(() => setShowBars(true), 100);
+      return () => clearTimeout(t);
+    } else {
+      setShowBars(false);
+    }
+  }, [gameState]);
 
   useEffect(() => {
     if (quiz?.questions[currentQuestionIndex]) {
@@ -54,8 +65,8 @@ export default function HostGame() {
         setAllResponses(prev => [...prev, { ...data, createdAt: new Date() }]);
         
         if (data.questionId && data.questionId === currentQuestionIdRef.current) {
+          setTotalAnswers(prevTotal => prevTotal + 1);
           setAnswers(prevAnswers => {
-            setTotalAnswers(prevTotal => prevTotal + 1);
             const newAnswers = [...prevAnswers];
             if (data.optionIndex >= 0 && data.optionIndex < 4) {
               newAnswers[data.optionIndex]++;
@@ -93,9 +104,9 @@ export default function HostGame() {
           }
         }
       } catch (err) {}
-    }, 3000);
+    }, gameState === 'QUESTION' ? 1000 : 3000);
     return () => clearInterval(interval);
-  }, [pin, currentQuestionIndex, quiz, totalAnswers]);
+  }, [pin, currentQuestionIndex, quiz, totalAnswers, gameState]);
 
   const handleNext = async () => {
     if (currentQuestionIndex < (quiz?.questions?.length || 0) - 1) {
@@ -113,6 +124,16 @@ export default function HostGame() {
       });
     } else {
       setGameState('FINISHED');
+      
+      await fetch(`/api/sessions/${pin}/next`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'FINISHED' })
+      });
+
+      fetch(`/api/sessions/${pin}/leaderboard`)
+        .then(res => res.json())
+        .then(data => setLeaderboard(data.players || []));
     }
   };
 
@@ -121,8 +142,8 @@ export default function HostGame() {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && gameState === 'QUESTION') {
-      // AUTO-PROGRESS to next question
-      handleNext();
+      // Transition to RESULTS screen to show the animated bar chart
+      setGameState('RESULTS');
     }
   }, [timeLeft, gameState]);
 
@@ -181,15 +202,89 @@ export default function HostGame() {
           {gameState === 'QUESTION' && (
             <div className="question_section">
               <h1 className="presenter_question_text animate-fade-in">{currentQuestion.text}</h1>
-              <div className="timer_display">{timeLeft}</div>
+              <div className="timer_display_wrapper">
+                <div className="timer_display">{timeLeft}</div>
+              </div>
+            </div>
+          )}
+
+          {gameState === 'RESULTS' && (
+            <div className="results_section animate-fade-in" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h1 className="presenter_question_text" style={{ marginBottom: '1rem' }}>{currentQuestion.text}</h1>
+              <div className="results_chart_container" style={{ width: '100%', maxWidth: '800px', margin: '2rem 0' }}>
+                <div className="chart_bars">
+                  {answers.map((count, i) => {
+                    const isCorrect = currentQuestion.options[i]?.isCorrect;
+                    return (
+                      <div key={i} className={`chart_column ${isCorrect ? 'correct_ans' : 'wrong_ans'}`} style={{ opacity: isCorrect ? 1 : 0.5 }}>
+                        <div 
+                          className={`chart_bar bar_${i}`} 
+                          style={{ 
+                            height: `${showBars ? (totalAnswers > 0 ? (count / totalAnswers) * 100 + 5 : 5) : 5}%`,
+                            transition: 'height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                          }}
+                        >
+                          <span className="count_label">{count}</span>
+                        </div>
+                        <div className="chart_shape">{shapes[i]}</div>
+                        {isCorrect && <div style={{ color: '#4ade80', fontSize: '2rem', marginTop: '0.5rem' }}>✓</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <Button variant="primary" size="lg" onClick={handleNext} style={{ marginTop: '2rem', fontSize: '1.5rem', padding: '1rem 3rem' }}>
+                Next Question
+              </Button>
             </div>
           )}
 
           {gameState === 'FINISHED' && (
-            <div className="victory_screen animate-fade-in">
-              <div className="crown_icon">👑</div>
-              <h1>Game Complete!</h1>
-              <Button variant="primary" onClick={() => window.location.href = '/dashboard'}>Back to Dashboard</Button>
+            <div className="victory_screen animate-fade-in" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '5rem' }}>
+              <h1 className="presenter_question_text" style={{ marginBottom: 'auto', marginTop: '2rem' }}>Podium</h1>
+              
+              <div className="podium_container" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '1rem', height: '400px' }}>
+                {/* 2nd Place */}
+                {leaderboard[1] && (
+                  <div className="podium_place place_2 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                    <AnimatedAvatar seed={leaderboard[1].nickname} size={80} />
+                    <div className="podium_pillar" style={{ height: '150px', background: 'var(--blue)', width: '140px', borderRadius: '12px 12px 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '1rem', color: 'white' }}>
+                      <span style={{ fontSize: '2rem', fontWeight: 900 }}>2</span>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{leaderboard[1].nickname}</span>
+                      <span style={{ fontSize: '1rem', opacity: 0.8 }}>{leaderboard[1].score}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 1st Place */}
+                {leaderboard[0] && (
+                  <div className="podium_place place_1 animate-slide-up" style={{ animationDelay: '1.5s', zIndex: 10 }}>
+                    <div className="crown" style={{ fontSize: '3rem', marginBottom: '-10px', animation: 'bounceSlow 2s infinite' }}>👑</div>
+                    <AnimatedAvatar seed={leaderboard[0].nickname} size={100} />
+                    <div className="podium_pillar" style={{ height: '250px', background: 'var(--yellow)', width: '160px', borderRadius: '12px 12px 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '1rem', color: 'black' }}>
+                      <span style={{ fontSize: '3rem', fontWeight: 900 }}>1</span>
+                      <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{leaderboard[0].nickname}</span>
+                      <span style={{ fontSize: '1.2rem', opacity: 0.8 }}>{leaderboard[0].score}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3rd Place */}
+                {leaderboard[2] && (
+                  <div className="podium_place place_3 animate-slide-up" style={{ animationDelay: '1s' }}>
+                    <AnimatedAvatar seed={leaderboard[2].nickname} size={80} />
+                    <div className="podium_pillar" style={{ height: '100px', background: 'var(--green)', width: '140px', borderRadius: '12px 12px 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '1rem', color: 'white' }}>
+                      <span style={{ fontSize: '2rem', fontWeight: 900 }}>3</span>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>{leaderboard[2].nickname}</span>
+                      <span style={{ fontSize: '1rem', opacity: 0.8 }}>{leaderboard[2].score}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginTop: '3rem' }}>
+                <Button variant="primary" size="lg" onClick={() => window.location.href = '/dashboard'}>Return to Dashboard</Button>
+              </div>
             </div>
           )}
         </section>

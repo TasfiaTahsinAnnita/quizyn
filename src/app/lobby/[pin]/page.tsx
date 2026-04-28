@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { pusherClient } from '@/lib/pusher';
 import { Button } from '@/components/Button';
+import { AnimatedAvatar } from '@/components/AnimatedAvatar';
 import './lobby.css';
 
 interface Player {
@@ -79,11 +80,12 @@ export default function HostLobby() {
 
       <div className="player_grid">
         {players.length === 0 ? (
-          <p className="animate-fade-in" style={{ opacity: 0.6 }}>Waiting for players to join...</p>
+          <p className="animate-fade-in" style={{ opacity: 0.6, fontSize: '1.5rem', marginTop: '2rem' }}>Waiting for players...</p>
         ) : (
-          players.map(player => (
-            <div key={player.id} className="player_name">
-              {player.nickname}
+          players.map((player, index) => (
+            <div key={player.id} className="player_card animate-pop-in" style={{ animationDelay: `${(index % 10) * 100}ms` }}>
+              <AnimatedAvatar seed={player.nickname} size={80} />
+              <div className="player_name">{player.nickname}</div>
             </div>
           ))
         )}

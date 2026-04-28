@@ -51,6 +51,7 @@ model GameSession {
   id        String   @id @default(cuid())
   pin       String   @unique
   status    String   @default("LOBBY") // LOBBY, ACTIVE, FINISHED
+  currentQuestionIndex Int @default(0)
   quiz      Quiz     @relation(fields: [quizId], references: [id])
   quizId    String
   players   Player[]

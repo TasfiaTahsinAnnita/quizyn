@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { pusherServer } from '@/lib/pusher';
 
 export async function POST(
@@ -7,7 +8,16 @@ export async function POST(
 ) {
   try {
     const { pin } = await params;
-    const { questionIndex } = await req.json();
+    const { questionIndex, status } = await req.json();
+
+    // Update the session in the database
+    await prisma.gameSession.update({
+      where: { pin },
+      data: { 
+        ...(questionIndex !== undefined && { currentQuestionIndex: questionIndex }),
+        ...(status && { status })
+      }
+    });
 
     // Notify all players that a new question has started
     try {

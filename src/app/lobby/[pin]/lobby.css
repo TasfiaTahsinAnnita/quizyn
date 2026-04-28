@@ -44,18 +44,21 @@
   max-width: 1000px;
 }
 
-.player_name {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.8rem 2rem;
-  border-radius: 8px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.player_card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem;
 }
 
-@keyframes popIn {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+.player_name {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .start_game_btn {

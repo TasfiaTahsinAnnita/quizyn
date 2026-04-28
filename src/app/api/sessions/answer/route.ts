@@ -38,13 +38,8 @@ export async function POST(req: Request) {
     if (questionId) {
       currentQuestion = session.quiz.questions.find(q => q.id === questionId);
     } else {
-      // Fallback: find the first unanswered question
-      const answeredResponses = await prisma.response.findMany({
-        where: { playerId: player.id, sessionId: session.id },
-        select: { questionId: true }
-      });
-      const answeredIds = answeredResponses.map(r => r.questionId);
-      currentQuestion = session.quiz.questions.find(q => !answeredIds.includes(q.id));
+      // Use the host's current active question index
+      currentQuestion = session.quiz.questions[session.currentQuestionIndex];
     }
 
     if (!currentQuestion) {

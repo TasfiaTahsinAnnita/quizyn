@@ -13,6 +13,7 @@ interface Option {
 interface Question {
   text: string;
   timer: number;
+  points: number;
   options: Option[];
 }
 
@@ -23,6 +24,7 @@ export default function CreateQuiz() {
     {
       text: '',
       timer: 20,
+      points: 1000,
       options: [
         { text: '', isCorrect: true },
         { text: '', isCorrect: false },
@@ -36,6 +38,7 @@ export default function CreateQuiz() {
     setQuestions([...questions, {
       text: '',
       timer: 20,
+      points: 1000,
       options: [
         { text: '', isCorrect: true },
         { text: '', isCorrect: false },
@@ -165,7 +168,6 @@ export default function CreateQuiz() {
                   </div>
                 ))}
               </div>
-              
               <div className="form_group" style={{ marginTop: '1rem' }}>
                 <label>Timer (Seconds)</label>
                 <select 
@@ -181,6 +183,23 @@ export default function CreateQuiz() {
                   <option value={20}>20s</option>
                   <option value={30}>30s</option>
                   <option value={60}>60s</option>
+                </select>
+              </div>
+
+              <div className="form_group" style={{ marginTop: '1rem' }}>
+                <label>Points</label>
+                <select 
+                  className="form_input" 
+                  value={q.points}
+                  onChange={(e) => {
+                    const newQuestions = [...questions];
+                    newQuestions[qIndex].points = parseInt(e.target.value);
+                    setQuestions(newQuestions);
+                  }}
+                >
+                  <option value={0}>0 (No Points)</option>
+                  <option value={1000}>1000 (Standard)</option>
+                  <option value={2000}>2000 (Double Points)</option>
                 </select>
               </div>
             </div>
