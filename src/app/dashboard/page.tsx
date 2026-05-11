@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/Button";
-import Link from "next/link";
 import "./dashboard.css";
 
 interface Quiz {
@@ -14,6 +14,7 @@ interface Quiz {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,9 +59,7 @@ export default function Dashboard() {
       <main className="dashboard_main">
         <div className="dashboard_actions">
           <h2>My Quizzes</h2>
-          <Link href="/dashboard/create">
-            <Button variant="secondary">+ Create New Quiz</Button>
-          </Link>
+          <Button variant="secondary" onClick={() => router.push('/dashboard/create')}>+ Create New Quiz</Button>
         </div>
 
         <div className="quiz_grid">
@@ -80,9 +79,7 @@ export default function Dashboard() {
           ) : (
             <div className="empty_state">
               <p>You haven't created any quizzes yet.</p>
-              <Link href="/dashboard/create">
-                <Button variant="primary">Create your first quiz</Button>
-              </Link>
+              <Button variant="primary" onClick={() => router.push('/dashboard/create')}>Create your first quiz</Button>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { pusherClient } from '@/lib/pusher';
 import { Button } from '@/components/Button';
 import { AnimatedAvatar } from '@/components/AnimatedAvatar';
@@ -14,7 +14,13 @@ interface Player {
 
 export default function HostLobby() {
   const { pin } = useParams();
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     // 1. Initial Fetch of existing players
@@ -62,11 +68,13 @@ export default function HostLobby() {
     try {
       // Notify all players via Pusher
       await fetch(`/api/sessions/${pin}/start`, { method: 'POST' });
-      window.location.href = `/game/${pin}`;
+      router.push(`/game/${pin}`);
     } catch (err) {
       alert('Failed to start game.');
     }
   };
+
+  if (!isMounted) return <div className="lobby_wrapper">Loading...</div>;
 
   return (
     <div className="lobby_wrapper">

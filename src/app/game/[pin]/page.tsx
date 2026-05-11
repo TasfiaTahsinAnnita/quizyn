@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { pusherClient } from '@/lib/pusher';
 import { Button } from '@/components/Button';
 import { AnimatedAvatar } from '@/components/AnimatedAvatar';
@@ -15,6 +15,8 @@ interface PlayerAnswer {
 
 export default function HostGame() {
   const { pin } = useParams();
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
   const [quiz, setQuiz] = useState<any>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -26,6 +28,10 @@ export default function HostGame() {
   const [viewingQuestionIndex, setViewingQuestionIndex] = useState<number | null>(null);
   const [showBars, setShowBars] = useState(false);
   const currentQuestionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (gameState === 'RESULTS') {
@@ -147,7 +153,7 @@ export default function HostGame() {
     }
   }, [timeLeft, gameState]);
 
-  if (!quiz) return <div className="lobby_wrapper">Initializing Game Engine...</div>;
+  if (!isMounted || !quiz) return <div className="lobby_wrapper">Initializing Game Engine...</div>;
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const shapes = [<Triangle key="1" />, <Square key="2" />, <Circle key="3" />, <Hexagon key="4" />];
@@ -182,7 +188,14 @@ export default function HostGame() {
           ))}
         </div>
         <div className="sidebar_footer">
-          <Button variant="outline" className="w-full" onClick={() => window.location.href = '/dashboard'}>End Game</Button>
+          <Button variant="outline" className="w-full" onClick={async () => {
+            await fetch(`/api/sessions/${pin}/next`, { 
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'FINISHED' })
+            });
+            router.push('/dashboard');
+          }}>End Game</Button>
         </div>
       </aside>
 
@@ -283,7 +296,7 @@ export default function HostGame() {
               </div>
 
               <div style={{ marginTop: '3rem' }}>
-                <Button variant="primary" size="lg" onClick={() => window.location.href = '/dashboard'}>Return to Dashboard</Button>
+                <Button variant="primary" size="lg" onClick={() => router.push('/dashboard')}>Return to Dashboard</Button>
               </div>
             </div>
           )}

@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import "./page.css";
 
 export default function Home() {
+  const router = useRouter();
   const [pin, setPin] = useState('');
   const [nickname, setNickname] = useState('');
   const [isJoining, setIsJoining] = useState(false);
@@ -25,7 +27,7 @@ export default function Home() {
       if (res.ok) {
         localStorage.setItem('current_pin', pin);
         localStorage.setItem('nickname', nickname);
-        window.location.href = '/play';
+        router.push('/play');
       } else {
         alert(data.error);
       }
@@ -46,9 +48,7 @@ export default function Home() {
           <div className="card host_card">
             <h2>Host a Game</h2>
             <p>Create quizzes and challenge your friends.</p>
-            <Link href="/dashboard" style={{ width: '100%' }}>
-              <Button variant="primary" fullWidth>Get Started</Button>
-            </Link>
+            <Button variant="primary" fullWidth onClick={() => router.push('/dashboard')}>Get Started</Button>
           </div>
           
           <div className="card player_card">

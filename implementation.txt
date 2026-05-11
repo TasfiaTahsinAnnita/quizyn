@@ -1,0 +1,29 @@
+Debugging and Fixing Kahoot Clone Bugs
+This document details the implementation plan to resolve the bugs identified during the comprehensive audit of the Quizyn (Kahoot clone) project.
+
+User Review Required
+Please review the proposed changes below. The bugs identified range from simple UI state issues to more complex backend data sorting inconsistencies that break the core gameplay loop.
+
+Proposed Changes
+UI & Navigation Fixes
+[MODIFY] src/app/dashboard/create/page.tsx
+Fix "Save Quiz" Button Stuck: Replace the native alert and window.location.href with Next.js useRouter for smoother client-side navigation. This prevents the browser thread from hanging and ensures the "Saving..." state correctly transitions as the user is routed back to the dashboard.
+[MODIFY] src/app/page.tsx, src/app/play/page.tsx, src/app/game/[pin]/page.tsx, src/app/lobby/[pin]/page.tsx
+Fix Hydration Mismatch: Next.js client and server rendered HTML were mismatching. I will implement a standard isMounted state check or adapt client-side storage usage to ensure the initial render on the client precisely matches the server, preventing hydration errors during transitions. I will also replace window.location.href with useRouter across these files.
+Core Gameplay & Real-time Fixes
+[MODIFY] src/app/api/quizzes/route.ts
+Fix Question Order Mismatch: Update the GET route to fetch questions and options ordered by their id (asc). Prisma does not guarantee order by default, which caused different clients to see different questions or options at the same index.
+[MODIFY] src/app/api/sessions/[pin]/route.ts
+Fix Results Bar Chart & Text Mismatch: Update the session fetch logic to include orderBy: { id: 'asc' } for both questions and their nested options. This guarantees that the host and players are perfectly synchronized when mapping array indices to shapes/colors.
+[MODIFY] src/app/api/sessions/answer/route.ts
+Fix Incorrect Answer Validation: Ensure the backend validates answers against an explicitly ordered list of options (orderBy: { id: 'asc' }). This resolves the bug where a player clicked the correct answer but the system evaluated it as incorrect because the optionIndex mapped to a different option in the unordered database array.
+UX & Flow Fixes
+[MODIFY] src/app/game/[pin]/page.tsx
+Fix Stuck Player Page: The "End Game" button in the host's sidebar currently only redirects the host, leaving the session active and players stranded on a "Waiting for host..." screen. I will update this button to first send a POST request to /api/sessions/[pin]/next with { status: 'FINISHED' } before redirecting. This ensures polling players receive the finished state and transition to the podium/end screen.
+Verification Plan
+Automated/Manual Verification
+Rerun the browser subagent to execute the complete game loop (Create Quiz -> Host -> Join -> Play -> End).
+Verify that the correct option is validated accurately.
+Verify the results bar chart matches the votes perfectly.
+Verify no hydration warnings appear in the console.
+Verify players successfully see the podium screen when the host ends the game early.

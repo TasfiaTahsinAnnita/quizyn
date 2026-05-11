@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { pusherClient } from '@/lib/pusher';
 import { Triangle, Square, Circle, Hexagon } from 'lucide-react';
 import { AnimatedAvatar } from '@/components/AnimatedAvatar';
@@ -9,6 +10,8 @@ import './play.css';
 export default function PlayerGame() {
   const [pin, setPin] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
   const [gameState, setGameState] = useState<'WAITING' | 'PLAYING' | 'RESULT' | 'FINISHED'>('WAITING');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
@@ -19,6 +22,7 @@ export default function PlayerGame() {
   const [isRevealPhase, setIsRevealPhase] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const savedPin = localStorage.getItem('current_pin');
     const savedName = localStorage.getItem('nickname');
     
@@ -35,7 +39,7 @@ export default function PlayerGame() {
             console.error('Session error:', data.error);
             // If session is not found, clear storage and go back
             localStorage.removeItem('current_pin');
-            window.location.href = '/';
+            router.push('/');
             return;
           }
 
@@ -164,6 +168,8 @@ export default function PlayerGame() {
     }
   };
 
+  if (!isMounted) return null;
+
   if (gameState === 'WAITING') {
     return (
       <div className="player_status_overlay">
@@ -246,7 +252,7 @@ export default function PlayerGame() {
           <p style={{ opacity: 0.8, fontSize: '1.2rem' }}>Look at the host's screen for the podium!</p>
           <button 
             style={{ marginTop: '2rem', padding: '1rem 2rem', borderRadius: '30px', background: 'white', color: 'var(--primary)', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
-            onClick={() => window.location.href = '/'}
+            onClick={() => router.push('/')}
           >
             Play Again
           </button>

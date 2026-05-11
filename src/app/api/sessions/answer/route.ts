@@ -14,8 +14,11 @@ export async function POST(req: Request) {
         quiz: {
           include: {
             questions: {
+              orderBy: { id: 'asc' },
               include: {
-                options: true
+                options: {
+                  orderBy: { id: 'asc' }
+                }
               }
             }
           }

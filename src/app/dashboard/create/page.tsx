@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/Button';
 import Link from 'next/link';
 import './create.css';
@@ -18,6 +19,7 @@ interface Question {
 }
 
 export default function CreateQuiz() {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<Question[]>([
@@ -84,8 +86,7 @@ export default function CreateQuiz() {
 
       const contentType = res.headers.get("content-type");
       if (res.ok) {
-        alert('Quiz saved successfully!');
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
       } else if (contentType && contentType.indexOf("application/json") !== -1) {
         const data = await res.json();
         console.error('Save failed with JSON:', data);
